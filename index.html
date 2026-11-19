@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小小焗烤師｜料理學習遊戲</title>
+  <style>
+    :root { color-scheme: light; --ink:#28352d; --green:#355e45; --cream:#fff8eb; --orange:#ed9654; }
+    * { box-sizing:border-box }
+    body { margin:0; min-height:100vh; background:#f1eadc; color:var(--ink); font-family:ui-rounded,"Noto Sans TC",system-ui,sans-serif; }
+    .shell { width:min(1080px,100%); margin:auto; padding:24px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+    .brand { font-weight:900; letter-spacing:.04em; font-size:18px; }
+    .badge { border-radius:999px; padding:9px 14px; background:#fff; font-size:13px; color:#55715e; }
+    main { display:grid; grid-template-columns:1.05fr .95fr; min-height:600px; overflow:hidden; border-radius:28px; background:var(--cream); box-shadow:0 20px 50px #58452b20; }
+    .scene { position:relative; display:flex; justify-content:center; align-items:center; overflow:hidden; background:linear-gradient(160deg,#e9f0d7,#f7dcae); transition:background .4s; }
+    .scene[data-stage="wash"] { background:linear-gradient(145deg,#d8eff0,#c8e4df); }
+    .scene[data-stage="cut"] { background:linear-gradient(145deg,#f8e7ca,#ecd5b6); }
+    .scene[data-stage="stove"] { background:linear-gradient(145deg,#f0d2ab,#d9b08a); }
+    .scene[data-stage="oven"] { background:linear-gradient(145deg,#edc293,#d89563); }
+    .scene[data-stage="serve"] { background:linear-gradient(145deg,#e4edcf,#f4e1b9); }
+    .sun { position:absolute; width:260px;height:260px;border-radius:50%;background:#fff6c7;top:-90px;right:-65px;opacity:.8 }
+    .counter { position:absolute; bottom:0; width:100%; height:34%; background:#bb8059; border-top:14px solid #d69e70; }
+    .station { z-index:1; width:74%; max-width:420px; min-height:320px; border-radius:25px; padding:20px; background:#fff8eb; box-shadow:0 20px 25px #58452b25; display:flex; flex-direction:column; }
+    .station-top { display:flex; justify-content:space-between; color:#56665a; font-weight:800; font-size:13px; margin-bottom:14px }
+    .station-window { flex:1; min-height:220px; border:10px solid #e8dfce; border-radius:18px; background:linear-gradient(145deg,#fbf8ef,#e8e2d2); display:grid; place-items:center; overflow:hidden; }
+    .dish { width:82%; aspect-ratio:1.35; border-radius:48%; display:grid; place-items:center; font-size:76px; background:linear-gradient(#faf7ee,#dcd6c8); box-shadow:0 7px #a9a193; transition:.4s; }
+    .station[data-stage="wash"] .station-window { background:linear-gradient(#c9edf0,#f5f3e7); }
+    .station[data-stage="cut"] .station-window { background:linear-gradient(#f7e2c5,#fff8ea); }
+    .station[data-stage="stove"] .station-window { background:linear-gradient(#d5e3cf,#f3e3c6); }
+    .station[data-stage="oven"] { background:#43514b; }
+    .station[data-stage="oven"] .station-top { color:#e9eee8; }
+    .station[data-stage="oven"] .station-window { border-color:#6c7770; background:radial-gradient(ellipse at center,#292f2a,#151a17); }
+    .station[data-stage="serve"] .station-window { background:linear-gradient(#f9efd4,#e4edcf); }
+    .dish.done { filter:drop-shadow(0 0 13px #ffb64d); transform:scale(1.08) }
+    .oven-knobs { display:flex; justify-content:center; gap:18px; padding-top:14px }
+    .knob { width:24px;height:24px;border-radius:50%;background:#d1d2c8;border:4px solid #8b958d }
+    .steam { position:absolute; z-index:2; top:25%; font-size:30px; animation:float 2.5s infinite ease-in-out }
+    @keyframes float { 50% { transform:translateY(-12px);opacity:.45 } }
+    .panel { padding:42px 42px 34px; display:flex; flex-direction:column; }
+    .eyebrow { color:#b6723e; font-weight:800; font-size:13px; letter-spacing:.12em; }
+    h1 { margin:12px 0 8px; font-size:clamp(28px,4vw,40px); line-height:1.15; }
+    .sub { margin:0; color:#68736a; line-height:1.7; }
+    .progress { display:flex; gap:7px; margin:25px 0 22px; }
+    .dot { height:7px; flex:1; background:#e5dfd1; border-radius:99px; }
+    .dot.active { background:#72a078 }
+    .step-label { font-size:13px; color:#809082; font-weight:800; }
+    h2 { margin:8px 0 9px; font-size:24px; }
+    .description { min-height:78px; margin:0; color:#566259; line-height:1.8; }
+    .tip { margin-top:17px; padding:13px 15px; border-radius:14px; background:#edf2e4; color:#4d654d; font-size:14px; line-height:1.6; }
+    .actions { display:flex; gap:10px; margin-top:auto; padding-top:24px; }
+    button { border:0; border-radius:13px; padding:14px 18px; font:inherit; font-weight:800; cursor:pointer; }
+    button:focus-visible { outline:3px solid #f0a35b; outline-offset:3px }
+    .next { flex:1; color:white; background:var(--green); box-shadow:0 4px #254332; }
+    .next:hover { background:#427354 }
+    .back { background:#ebe7dd;color:#5e685e }
+    .recipe { margin-top:18px; font-size:12px; color:#92968e; }
+    .play-area { margin-top:14px; min-height:112px; padding:14px; border:1px solid #e8e2d5; border-radius:16px; background:#fffdf8; }
+    .play-title { font-weight:850; font-size:13px; margin-bottom:10px; color:#657468; }
+    .choices { display:flex; flex-wrap:wrap; gap:8px; }
+    .choice { padding:9px 11px; background:#f1eee5; color:#465249; border:2px solid transparent; border-radius:12px; font-size:13px; }
+    .choice.selected { background:#e7f1df; border-color:#7ba47a; }
+    .choice:disabled { cursor:default; }
+    .meter { height:13px; background:#e9e6dc; border-radius:99px; overflow:hidden; margin:12px 0 8px; }
+    .meter-fill { width:0; height:100%; background:#82a878; transition:width .15s; }
+    .play-note { font-size:12px; color:#718074; min-height:18px; margin-top:8px; }
+    .play-action { padding:9px 13px; border-radius:10px; background:#e8efe2; color:#385a3d; font-size:13px; }
+    .play-action:disabled { opacity:.45; cursor:default; }
+    .slider { width:100%; accent-color:#54815b; }
+    @media(max-width:760px) { .shell{padding:12px}.badge{display:none} main{grid-template-columns:1fr}.scene{min-height:350px}.station-window{min-height:170px}.panel{padding:28px 24px 24px;min-height:470px} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><div class="brand">🍳 小小料理學院</div><div class="badge">新手廚師 · 第一堂課</div></header>
+    <main>
+      <section class="scene" id="scene" aria-label="料理場景">
+        <div class="sun"></div><div class="steam">♨️</div>
+        <div class="station" id="station"><div class="station-top"><span id="sceneLabel">料理工作台</span><span id="ovenReadout">準備中</span></div><div class="station-window"><div class="dish" id="dish">🥘</div></div><div class="oven-knobs"><span class="knob"></span><span class="knob"></span><span class="knob"></span></div></div>
+        <div class="counter"></div>
+      </section>
+      <section class="panel">
+        <div class="eyebrow">義式繽紛焗烤麵 · 1 人份</div>
+        <h1>備料、煮麵到焗烤</h1>
+        <p class="sub">每個步驟都要親自操作，備料清單會標出食材重量。</p>
+        <div class="progress" id="progress"></div>
+        <div class="step-label" id="stepLabel"></div>
+        <h2 id="stepTitle"></h2>
+        <p class="description" id="stepDescription"></p>
+        <div class="tip" id="stepTip"></div>
+        <div class="play-area" id="playArea"></div>
+        <div class="actions"><button class="back" id="back">上一步</button><button class="next" id="next">開始料理 →</button></div>
+        <div class="recipe">食譜參考：<a href="https://health.tainan.gov.tw/lasthealthweb/warehouse/%7B8CECF083-CBD2-4017-AA26-5A4868AD2E88%7Dfile/lizi/108/108%E5%B9%B406%E6%9C%88%E5%81%A5%E5%BA%B7%E5%A0%B1.pdf" target="_blank">臺南市政府衛生局《義式繽紛焗烤麵》</a> · 遊戲時間為教學模擬</div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const ingredients=[['筆管麵（乾）','40 g'],['雞胸肉','60 g'],['大番茄','50 g'],['綠花椰','50 g'],['鳳梨','50 g'],['鴻喜菇','50 g'],['木耳','25 g'],['洋蔥','25 g'],['乳酪絲','45 g']];
+    const steps=[
+      {title:'秤量並備齊食材',scene:'prep',label:'備料工作台',icon:'🧺',desc:'這份食譜是 1 人份。逐項秤量：筆管麵（乾）40 g、雞胸肉 60 g、大番茄 50 g、綠花椰 50 g、鳳梨 50 g、鴻喜菇 50 g、木耳 25 g、洋蔥 25 g、乳酪絲 45 g。',tip:'乳酪絲本身帶鹹味，食譜不另外加調味料。',kind:'ingredients'},
+      {title:'清洗蔬果與菇類',scene:'wash',label:'水槽',icon:'🚿',desc:'用流動清水洗大番茄、綠花椰、鳳梨、鴻喜菇、木耳和洋蔥，洗完放入乾淨瀝水籃。',tip:'雞肉與蔬菜分開處理；碰過生雞肉的手和器具要清洗。',kind:'wash'},
+      {title:'切洋蔥與鳳梨',scene:'cut',label:'切菜板',icon:'🔪',desc:'將 25 g 洋蔥和 50 g 鳳梨切成大小接近的小塊，分別放入小碗。',tip:'固定砧板，手指彎起避開刀刃。',kind:'dice'},
+      {title:'汆燙番茄、去皮再切塊',scene:'stove',label:'爐台・番茄鍋',icon:'🍅',desc:'大番茄 50 g 放入滾水汆燙至外皮容易剝除。撈出稍微放涼，去皮後切小塊。',tip:'撈取時使用漏勺，小心滾水和蒸氣。',kind:'tomato'},
+      {title:'切雞肉、花椰菜和木耳',scene:'cut',label:'切菜板・生熟分開',icon:'🔪',desc:'將雞胸肉 60 g、綠花椰 50 g、木耳 25 g 分別切成適口小塊，分開放置，避免生雞肉碰到蔬菜。',tip:'處理生雞肉後，以清潔劑和清水洗手、砧板及刀具。',kind:'dice'},
+      {title:'鴻喜菇剝成小束',scene:'prep',label:'備料工作台',icon:'🍄',desc:'把鴻喜菇 50 g 拆成小束，較粗的部分再撕小一點，放入乾淨碗中。',tip:'大小接近較容易均勻汆燙。',kind:'mushroom'},
+      {title:'汆燙雞肉與蔬菜配料',scene:'stove',label:'爐台・汆燙鍋',icon:'♨️',desc:'將雞胸肉、綠花椰、木耳和鴻喜菇分批放入滾水汆熟，再用漏勺撈起瀝乾。',tip:'雞肉需完全熟透；鍋具與滾水請小心操作。',kind:'blanch'},
+      {title:'煮熟筆管麵',scene:'stove',label:'爐台・煮麵鍋',icon:'🍝',desc:'乾筆管麵 40 g 依包裝指示放入滾水煮熟，再用濾網瀝乾。',tip:'鍋水和蒸氣很燙；瀝水時讓鍋口遠離身體。',kind:'pasta'},
+      {title:'預熱烤箱',scene:'oven',label:'烤箱',icon:'🌡️',desc:'將烤箱預熱至 180–200°C，預熱完成後再準備入爐。',tip:'烤箱預熱及取出烤盤請由大人協助，並使用隔熱手套。',kind:'temp'},
+      {title:'把食材放入烤皿拌勻',scene:'prep',label:'組合工作台',icon:'🥣',desc:'將筆管麵、雞肉、番茄、花椰菜、鳳梨、鴻喜菇、木耳和洋蔥放入耐熱烤皿，充分拌勻。',tip:'確認烤皿可用於烤箱，並把食材鋪平。',kind:'combine'},
+      {title:'均勻撒上乳酪絲',scene:'prep',label:'組合工作台',icon:'🧀',desc:'將乳酪絲 45 g 均勻撒在食材表面，不要集中在單一位置。',tip:'食譜不另外加鹽。',kind:'cheese'},
+      {title:'入爐焗烤 5–10 分鐘',scene:'oven',label:'烤箱・焗烤中',icon:'🔥',desc:'將烤皿放入已預熱的烤箱，焗烤約 5–10 分鐘。觀察乳酪融化和表面狀態。',tip:'遊戲時間為流程模擬，不等於真實分鐘數。烤箱與烤皿很燙，請由大人協助。',kind:'bake'},
+      {title:'安全出爐，完成上桌',scene:'serve',label:'上桌區',icon:'🍽️',desc:'請大人戴隔熱手套取出烤皿，放在耐熱墊上。稍微放涼後即可享用。',tip:'完成流程：洗切與汆燙 → 煮麵 → 拌合 → 撒乳酪絲 → 焗烤。',kind:'serve'}
+    ];
+    let current=-1, progressByStep=Array(steps.length).fill(0), ovenTemp=0;
+    const $=id=>document.getElementById(id);
+    function goal(i){return {ingredients:9,wash:6,dice:3,tomato:3,mushroom:4,blanch:4,pasta:5,temp:1,combine:8,cheese:5,bake:5,serve:1}[steps[i].kind]||1}
+    function ready(i){return progressByStep[i]>=goal(i)}
+    function render(){
+      const started=current>=0,i=Math.max(current,0),s=steps[i];
+      $('progress').innerHTML=steps.map((_,n)=>'<span class="dot '+(started&&n<=i?'active':'')+'"></span>').join('');
+      $('stepLabel').textContent=started?'步驟 '+(i+1)+' / '+steps.length:'開始前先看看食材';
+      $('stepTitle').textContent=started?s.title:'今天要做：義式繽紛焗烤麵';
+      $('stepDescription').textContent=started?s.desc:'一人份料理任務。先備齊食材，再跟著場景逐步完成清洗、切配、汆燙、煮麵和焗烤。';
+      $('stepTip').textContent=started?'💡 '+s.tip:'📋 食材重量都會在第一步列出；每個操作完成後才能繼續。';
+      $('next').textContent=!started?'查看食材並開始 →':i===steps.length-1?'再玩一次 ↻':'完成這步 →';
+      $('next').disabled=started&&!ready(i);$('next').style.opacity=$('next').disabled?'.45':'1';
+      $('back').disabled=!started||i===0;$('back').style.opacity=$('back').disabled?'.45':'1';
+      const scene=started?s:{scene:'prep',label:'備料工作台',icon:'🧺'};
+      $('scene').dataset.stage=scene.scene;$('station').dataset.stage=scene.scene;
+      $('sceneLabel').textContent=scene.label;$('ovenReadout').textContent=started?(s.kind==='bake'&&ready(i)?'完成':'進行中'):'準備中';
+      $('dish').textContent=scene.icon;$('dish').classList.toggle('done',started&&i===steps.length-1);
+      renderPlay(started,i)
+    }
+    function renderPlay(started,i){
+      const area=$('playArea');if(!started){area.innerHTML='<div class="play-title">🎮 關卡操作區</div><div class="play-note">開始後依照左側場景，動手完成每一項料理工作。</div>';return}
+      const kind=steps[i].kind,n=progressByStep[i],g=goal(i);
+      if(kind==='ingredients'){
+        area.innerHTML='<div class="play-title">⚖️ 點選每樣食材，放進備料籃</div><div class="choices">'+ingredients.map(([name,qty],j)=>'<button class="choice '+(n>j?'selected':'')+'" data-ing="'+j+'" '+(n>j?'disabled':'')+'>'+(n>j?'✓ ':'')+name+' · '+qty+'</button>').join('')+'</div><div class="play-note">已秤量 '+n+' / 9 樣</div>';
+        area.querySelectorAll('[data-ing]').forEach(b=>b.onclick=()=>{progressByStep[i]++;render()});return
+      }
+      const config={wash:['🚿','依序沖洗一樣食材',['大番茄','綠花椰','鳳梨','鴻喜菇','木耳','洋蔥']],dice:['🔪','切好並放入小碗',['洋蔥切塊','鳳梨切塊','雞肉與蔬菜切塊']],tomato:['🍅','完成番茄處理',['放入滾水汆燙','撈起並小心去皮','切成小塊']],mushroom:['🍄','剝好一小束鴻喜菇',['剝成小束','再剝一束','再剝一束','整理好剩餘菇束']],blanch:['♨️','完成一種食材汆燙並瀝乾',['雞胸肉完全汆熟','綠花椰汆燙','木耳汆燙','鴻喜菇汆燙']],pasta:['🍝','完成煮麵流程',['放入筆管麵','麵條煮熟','確認熟度','倒入濾網','瀝乾麵水']],combine:['🥣','放入並拌勻一項食材',['筆管麵','雞肉','番茄','綠花椰','鳳梨','鴻喜菇','木耳','洋蔥']],cheese:['🧀','撒一把乳酪絲',['撒一把','再撒一把','補上空隙','鋪勻邊緣','完成均勻鋪面']],bake:['⏱️','按下按鈕觀察一個烘烤時段',['開始烘烤','觀察乳酪融化','繼續焗烤','觀察表面顏色','完成焗烤']]};
+      if(config[kind]){
+        const [emoji,title,items]=config[kind];area.innerHTML='<div class="play-title">'+emoji+' '+title+'</div><button class="choice" data-act>'+items[Math.min(n,g-1)]+'</button><div class="play-note">完成進度 '+n+' / '+g+'</div>';
+        area.querySelector('[data-act]').onclick=()=>{progressByStep[i]++;render()};return
+      }
+      if(kind==='temp'){
+        area.innerHTML='<div class="play-title">🌡️ 拖曳旋鈕設定食譜指定的預熱溫度</div><input class="slider" id="temp" type="range" min="150" max="220" step="10" value="'+(ovenTemp||150)+'"><div class="play-note" id="tempNote">目前 '+(ovenTemp||150)+'°C · 食譜範圍 180–200°C</div><div class="choices" style="margin-top:9px"><button class="choice" id="confirmTemp" '+(ovenTemp>=180&&ovenTemp<=200?'':'disabled')+'>確認預熱完成 ✓</button></div>';
+        $('temp').oninput=e=>{ovenTemp=+e.target.value;$('tempNote').textContent='目前 '+ovenTemp+'°C · 食譜範圍 180–200°C';$('confirmTemp').disabled=!(ovenTemp>=180&&ovenTemp<=200)};
+        $('confirmTemp').onclick=()=>{progressByStep[i]=1;render()};return
+      }
+      area.innerHTML='<div class="play-title">'+(kind==='serve'?'🍽️ 戴上隔熱手套並安全上桌':'🎮 完成這項操作')+'</div><button class="choice" data-act>'+(kind==='serve'?'安全取出並完成上桌':'完成')+'</button><div class="play-note">完成進度 '+n+' / '+g+'</div>';
+      area.querySelector('[data-act]').onclick=()=>{progressByStep[i]=1;render()}
+    }
+    $('next').onclick=()=>{if(current===steps.length-1){current=-1;progressByStep=Array(steps.length).fill(0);ovenTemp=0}else current++;render()};
+    $('back').onclick=()=>{if(current>0)current--;render()};render();
+  </script>
+</body>
+</html>
